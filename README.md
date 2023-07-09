@@ -1,5 +1,6 @@
 # 2D 플랫포머 게임 토이 프로젝트
 
+---
 
 ## 2023년 07월 06일(목)
 
@@ -91,3 +92,109 @@
 - Window > Animation > Animator : 하나의 오브젝트에 여러 애니메이션을 넣을 때(캐릭터가 서있을 때와 걸을 때의 애니메이션을 나눌 때)
     - State : 애니메이션 상태를 관리하는 애니메이터 단위
         - State를 우클릭한 후 “Set as Layer Default State”를 클릭하면 Entry 이후 기본상태로 설정 가능
+---
+### 플레이어 이동
+
+```csharp
+// 사용 코드
+// 파일명 : PlayerMove.cs
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class PlayerMove : MonoBehaviour
+{
+    public float maxSpeed;
+    Rigidbody2D rigid;
+    SpriteRenderer spriteRenderer;
+    Animator anim;
+
+    void Awake()
+    {
+        rigid = GetComponent<Rigidbody2D>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        anim = GetComponent<Animator>();
+    }
+
+    private void Update()
+    {
+        // Stop Speed
+       if(Input.GetButtonUp("Horizontal"))
+        {
+            rigid.velocity = new Vector2(rigid.velocity.normalized.x * 0.5f, rigid.velocity.y);
+        }
+
+        // Direction Sprite
+        if (Input.GetButton("Horizontal"))
+        {
+            spriteRenderer.flipX = Input.GetAxisRaw("Horizontal") == -1;
+        }
+       
+
+        if(Mathf.Abs(rigid.velocity.x) < 0.3)
+        {
+            anim.SetBool("isWalking", false);
+        }
+        else
+        {
+            anim.SetBool("isWalking", true);
+        }
+    }
+
+    void FixedUpdate()
+    {
+        // Move Speed
+        float h = Input.GetAxisRaw("Horizontal");
+        rigid.AddForce(Vector2.right * h, ForceMode2D.Impulse);
+
+        // Max Speed
+        if(rigid.velocity.x > maxSpeed) // Right Max Speed
+        {
+            rigid.velocity = new Vector2(maxSpeed, rigid.velocity.y);
+        }
+        else if(rigid.velocity.x < maxSpeed * (-1)) // Left Max Speed
+        {
+            rigid.velocity = new Vector2(maxSpeed * (-1), rigid.velocity.y);
+        }
+    }
+}
+```
+
+- FixedUpdate : 초당 대략 50회 → 꾹 누르면 빨라짐(상한가 제한 필요)
+- Public 변수를 사용하면 Unity Engine Inspector에서 수치를 직접 조정할 수 있어서 편리
+- 오르막을 위해서는 마찰력을 뺄 필요가 있음
+- 물리 법칙 적용 → Project창 > 우클릭 > Create > 2D > Pyshic Material 2D
+    - Friction : 마찰력
+    - Bounciness : 탄성
+
+- Player > Rigidbody 2D > Linear Drag : 공기 저항, 이동 시 속도를 느리게 함
+    - 공기 저항이 없으면 키를 눌렀다 떼면 멈추지 않음
+    - 너무 크면 문제가 되니 1~2 권장
+        - 양 옆 이동 뿐 아니라 낙하 속도에도 영향을 주기 때문에
+
+- 단발적인 키 입력은 FixedUpdate 보다 Update가 좋음
+    - Update는 1초에 60프레임 정도(컴퓨터에 따라서)
+    - FixedUpdate는 1초에 50프레임 정도라서 손해 보는 경우가 생김(키가 씹히는 경우 존재)
+- normalized : 벡터 크기를 1로 만든 상태(단위 벡터)
+    - 우측 이동 시 해당 값은 1
+    - 좌측 이동 시 해당 값은 -1
+    - 요약하면 방향을 판단할 때 사용
+
+- 방향에 따라 달라지는 애니메이션 적용하기 위한 작용
+    - 오브젝트 > Sprite Renderer > Flip : 스프라이트를 뒤집는 옵션
+        - 코드로 값을 주면 됨
+    - Animator에 들어가 현재 디폴트 State를 우클릭 > Make Transition
+        - Transition : 애니메이션 상태를 옮겨가는 통로
+    - Animator에 Parameters
+        - 애니메이터 매개변수 : 상태를 바꿀 때 필요한 변수
+        - State 사이에 연결 된 Transition 클릭
+        - Inspector 창 맨 아래 Conditions에 Patameters에 있는 것을 추가
+        - Inspector 창 Has Exit Time : 애니메이션이 끝날 때까지 상태를 유지(잘 안씀)
+- 2D 애니메이션 정리 : Has Exit Time 끄기, 겹구간 닫기, 매개변수 설정
+- 보통 애니메이션은 상호 연결하여 왔다갔다 할 수 있도록 연결
+- 이후 가동은 코드로 설정
+
+- 작은 팁
+    - C sharp에서는 Mathf라는 수학 관련 함수를 제공하는 클래스
+    - 자주 사용하는 함수 : Abs(절대값)
