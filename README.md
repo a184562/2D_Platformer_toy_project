@@ -315,3 +315,40 @@ public class PlayerMove : MonoBehaviour
     - distance : Ray에 닿았을 때의 거리 → 플레이어 크기를 1로 두고 거리를 0.5로 두어서 판단
     
 - 여기까지만 했을 때 무한 점프 → 조절 필요
+
+---
+
+## 2023년 07월 12일(화)
+
+---
+
+### 시청 강의
+
+- https://youtu.be/f8ixw9IpnD8
+
+---
+
+1. 타일 팔레트
+    - Window > 2D > Tile Palette : 타일을 사용하기 위해 모아둔 프리펩
+    - Create New Palette > 이름 설정 후 create
+    - 사용할 Sprite를 Tile Palette에 드래그 앤 드랍
+    - 미리 물감을 준비해두고 붓으로 찍는 개념
+    - 2022 버전에서는 Edit 버튼이 따로 없고 우측 위에 연필 버튼을 클릭하면 맵에 찍기 가능
+2. 타일맵
+    - Hierarchy > 우클릭 > 2D Object > TileMap > Rectangular : Scene에 격자무늬 생성
+    - TileMap : 타일을 일정하게 깔아두는 컴포넌트
+    - 팔레트에서 찍은 내용을 맵에 찍어서 맵을 생성
+    - 여기서 멈추면 Collider가 없음
+    - Add Component > TileMap Collider 2D를 사용해서 맵에 콜라이더 적용 → 생성만하면 바로 적용
+    - 여기까지만 하면 경사로를 올라 갈 수 없음
+    - Tip. 2D 프로젝트에서 카메라를 Player 안에 넣으면 시점이 따라감
+    
+3. 물리 모양 설정
+    - 물리 모양은 Sprite Editor에서 편집 가능
+    - Sprite 파일을 선택하고 Inspector > Sprite Editor 버튼
+    - Sprite Editor 창에 > 좌측 위 토글을 선택 > Custom Physics Shape
+    - 상단 바에 Generate를 누르면 기본 상태가 보여짐
+        - 이후 커스텀
+    - 커스텀 후 Apply를 눌러 적용
+    - 단순히 여기까지하면 경사를 오를 수 없지만 기존에 만들어놓은 물리법칙(Physics Material)을 TileMap Collider 2D의 Material에 넣으면 물리법칙이 적용되어 오를 수 있게 됨
+    - Tip. 타일팔레트에서 먼저 삭제 후, 물리 모양 편집이 훨씬 안전
