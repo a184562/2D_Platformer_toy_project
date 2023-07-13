@@ -352,3 +352,108 @@ public class PlayerMove : MonoBehaviour
     - 커스텀 후 Apply를 눌러 적용
     - 단순히 여기까지하면 경사를 오를 수 없지만 기존에 만들어놓은 물리법칙(Physics Material)을 TileMap Collider 2D의 Material에 넣으면 물리법칙이 적용되어 오를 수 있게 됨
     - Tip. 타일팔레트에서 먼저 삭제 후, 물리 모양 편집이 훨씬 안전
+
+---
+
+## 2023년 07월 13일(목)
+
+---
+
+### 시청 강의
+
+- https://youtu.be/7MYUOzgZTf8
+
+---
+
+```csharp
+// 사용 코드
+// 파일명 : EnemyMove.cs
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class EnemyMove : MonoBehaviour
+{
+    Rigidbody2D rigid;
+    public int nextMove;
+    Animator anim;
+    SpriteRenderer spriteRenderer;
+
+    void Awake()
+    {
+        rigid = GetComponent<Rigidbody2D>();
+        anim = GetComponent<Animator>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        float nextThinkTime = Random.Range(2f, 5f);
+        Invoke("Think", nextThinkTime);
+    }
+
+    
+    void FixedUpdate()
+    {
+        // Move
+        rigid.velocity = new Vector2(nextMove, rigid.velocity.y);
+
+        // Platform Check
+        Vector2 frontVec = new Vector2(rigid.position.x + nextMove, rigid.position.y);
+        Debug.DrawRay(frontVec, Vector3.down, new Color(0, 1, 0));
+
+        RaycastHit2D rayHit = Physics2D.Raycast(frontVec, Vector3.down, 1, LayerMask.GetMask("Platform"));
+
+        float nextThinkTime = Random.Range(2f, 5f);
+
+        if (rayHit.collider == null)
+        {
+            Turn();
+        }
+    }
+
+    // 재귀함수
+    void Think()
+    {
+        nextMove = Random.Range(-1, 2);
+        
+        anim.SetInteger("Walk Speed", nextMove);
+        if(nextMove != 0)
+        {
+            spriteRenderer.flipX = nextMove == 1;
+        }
+
+        float nextThinkTime = Random.Range(2f, 5f);
+        Invoke("Think", nextThinkTime);
+    }
+
+    void Turn()
+    {
+        nextMove = nextMove * -1;
+        spriteRenderer.flipX = nextMove == 1;
+
+        CancelInvoke();
+        float nextThinkTime = Random.Range(2f, 5f);
+        Invoke("Think", nextThinkTime);
+    }
+}
+```
+
+1. 몬스터 AI 구현하기
+    - 애니메이션 설정(Idle, Walk)
+2. 기본 이동
+    - Rigidbody 필요
+    - 이동 구현시 tip : 횡 이동 설정 시 rigid(Rigidbody 변수명).velocity = new Vector2(이동값, rigid.velocity.y);로 설정
+        - y 변수를 0으로 두지 않음을 꼭 기억
+    - 이렇게 설정 시 한 방향으로 등속운동
+3. 행동 설정
+    - 코드 작성 전에 어떻게 이동할지 미리 고민하는 것이 중요
+    - Random : 랜덤 수를 생성하는 로직 관련 클래스
+        - Range(Random의 하위 메소드) : 최소 최대 범위의 랜덤 수 생성(최대값 제외), 파이썬 range와 동일
+    - 재귀함수 이용 → 단 딜레이를 줄 것
+        - Invoke(”함수명”, 시간) : 주어진 시간이 지난 뒤, 지정된 함수를 실행하는 함수
+    - 여기에 맵에 따라 빠지는 경우가 생기므로 조절해야함
+4. 지능 높이기
+    - RayHit로 구현
+        - 기존 Player RayHit는 점프를 위해 바로 밑을 파악했다면 떨어지는 걸 방지해야 하므로 진행방향의 살짝 앞을 판단해야 함
+        - 작성 코드를 자세히 살펴 볼 것
+    - 방향을 바꿔 줄 때 현재 진행중이던 Invoke는 갱신할 필요가 있음
+        - CancelInvoke() : 현재 작동중인 모든 Invoke 함수를 멈추는 함수
+5. 이후 Player에 사용했던 애니메이션을 적용
