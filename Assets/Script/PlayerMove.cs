@@ -5,12 +5,20 @@ using UnityEngine;
 public class PlayerMove : MonoBehaviour
 {
     public GameManager gameManager;
+    public AudioClip audioJump;
+    public AudioClip audioAttack;
+    public AudioClip audioDamaged;
+    public AudioClip audioItem;
+    public AudioClip audioDie;
+    public AudioClip audioFinish;
+
     public float maxSpeed;
     public float jumpPower;
     Rigidbody2D rigid;
     SpriteRenderer spriteRenderer;
     Animator anim;
     CapsuleCollider2D capsuleCollider;
+    AudioSource audioSource;
 
     void Awake()
     {
@@ -18,6 +26,32 @@ public class PlayerMove : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
         anim = GetComponent<Animator>();
         capsuleCollider = GetComponent<CapsuleCollider2D>();
+        audioSource = GetComponent<AudioSource>();
+    }
+
+    private void PlaySound(string action)
+    {
+        switch (action)
+        {
+            case "JUMP":
+                audioSource.clip = audioJump;
+                break;
+            case "ATTACK":
+                audioSource.clip = audioAttack;
+                break;
+            case "DAMAGED":
+                audioSource.clip = audioDamaged;
+                break;
+            case "ITEM":
+                audioSource.clip = audioItem;
+                break;
+            case "DIE":
+                audioSource.clip = audioDie;
+                break;
+            case "FINISH":
+                audioSource.clip = audioFinish;
+                break;
+        }
     }
 
     private void Update()
@@ -27,6 +61,7 @@ public class PlayerMove : MonoBehaviour
         {
             rigid.AddForce(Vector2.up * jumpPower, ForceMode2D.Impulse);
             anim.SetBool("isJump", true);
+            PlaySound("JUMP");
         }
         
         // Stop Speed
@@ -96,11 +131,13 @@ public class PlayerMove : MonoBehaviour
             {
                 OnAttack(collision.transform);
                 gameManager.stagePoint += 500;
+                PlaySound("ATTACK");
             }
             // Damaged
             else
             {
                 OnDamaged(collision.transform.position);
+                PlaySound("DAMAGED");
             }
         }
     }
@@ -127,14 +164,19 @@ public class PlayerMove : MonoBehaviour
                 gameManager.stagePoint += 300;
             }
             
-
             // Deactive Item
             collision.gameObject.SetActive(false);
+
+            // Sound
+            PlaySound("ITEM");
         }
         else if (collision.gameObject.tag == "Finish")
         {
             // Next Stage -> Game Manager°¡ Ã³¸®
             gameManager.NextStage();
+
+            // Sound
+            PlaySound("FINISH");
         }
     }
 
@@ -193,4 +235,9 @@ public class PlayerMove : MonoBehaviour
         rigid.AddForce(Vector2.up * 5, ForceMode2D.Impulse);
     }
     
+    public void VelocityZero()
+    {
+        rigid.velocity = Vector2.zero;
+    }
+
 }
